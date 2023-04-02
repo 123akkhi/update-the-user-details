@@ -1,0 +1,147 @@
+<html>
+  <body>
+    <form onsubmit="saveToLocalStorage(event)">
+      <label>Name</label>
+      <input type="text" name="username" required />
+      <label>Email</label>
+      <input type="email" name="email" required />
+      <label>Phone Number</label>
+      <input type="tel" name="phonenumber" pattern="[0-9]{10}" required />
+      <button type="submit">Submit</button>
+    </form>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <div id="displayDiv">
+      <!-- Existing stored values will be displayed here -->
+    </div>
+    <script>
+      function saveToLocalStorage(event) {
+        event.preventDefault();
+        const name = event.target.username.value;
+        const email = event.target.email.value;
+        const phonenumber = event.target.phonenumber.value;
+        localStorage.setItem("name", name);
+        localStorage.setItem("email", email);
+        localStorage.setItem("phonenumber", phonenumber);
+        const object = {
+          name: name,
+          email: email,
+          phonenumber: phonenumber,
+        };
+        axios
+          .post(
+            "https://crudcrud.com/api/3fc743c5fa1f4bca893a07804ab782b9/AppointmentData",
+            object
+          )
+          .then((response) => {
+            console.log(response);
+            showNewUserOnScreen(response.data);
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+
+        alert("Form submitted successfully!");
+      }
+
+      //EVENT LISTENER
+      window.addEventListener("DOMContentLoaded", () => {
+        axios
+          .get(
+            "https://crudcrud.com/api/3fc743c5fa1f4bca893a07804ab782b9/AppointmentData"
+          )
+          .then((response) => {
+            console.log(response);
+            for (var i = 0; i < response.data.length; i++) {
+              showNewUserOnScreen(response.data[i]);
+            }
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      });
+      function showNewUserOnScreen(data) {
+  const nameDisplay = document.createElement("p");
+  nameDisplay.textContent = "Name: " + data.name;
+  const emailDisplay = document.createElement("p");
+  emailDisplay.textContent = "Email: " + data.email;
+  const phoneDisplay = document.createElement("p");
+  phoneDisplay.textContent = "Phone Number: " + data.phonenumber;
+
+  const editButton = document.createElement("button");
+  editButton.textContent = "Edit";
+  editButton.addEventListener("click", function () {
+    const form = document.querySelector("form");
+    form.username.value = data.name;
+    form.email.value = data.email;
+    form.phonenumber.value = data.phonenumber;
+    saveButton.style.display = "block";
+    displayDiv.removeChild(nameDisplay);
+    displayDiv.removeChild(emailDisplay);
+    displayDiv.removeChild(phoneDisplay);
+    displayDiv.removeChild(editButton);
+    displayDiv.removeChild(deleteButton);
+  });
+
+  const saveButton = document.createElement("button");
+  saveButton.textContent = "Save";
+  saveButton.style.display = "none";
+  saveButton.addEventListener("click", function () {
+    const newName = form.username.value;
+    const newEmail = form.email.value;
+    const newPhoneNumber = form.phonenumber.value;
+    const updatedObject = {
+      name: newName,
+      email: newEmail,
+      phonenumber: newPhoneNumber,
+    };
+    axios
+      .put(
+        `https://crudcrud.com/api/3fc743c5fa1f4bca893a07804ab782b9/AppointmentData/${data._id}`,
+        updatedObject
+      )
+      .then((response) => {
+        console.log(response);
+        nameDisplay.textContent = "Name: " + newName;
+        emailDisplay.textContent = "Email: " + newEmail;
+        phoneDisplay.textContent = "Phone Number: " + newPhoneNumber;
+        saveButton.style.display = "none";
+        editButton.style.display = "block";
+        displayDiv.appendChild(nameDisplay);
+        displayDiv.appendChild(emailDisplay);
+        displayDiv.appendChild(phoneDisplay);
+        displayDiv.appendChild(editButton);
+        displayDiv.appendChild(deleteButton);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  });
+
+  const deleteButton = document.createElement("button");
+  deleteButton.textContent = "Delete";
+  deleteButton.addEventListener("click", function () {
+    axios
+      .delete(
+        `https://crudcrud.com/api/3fc743c5fa1f4bca893a07804ab782b9/AppointmentData${data._id}`
+      )
+      .then((response) => {
+        console.log(response);
+        displayDiv.removeChild(nameDisplay);
+        displayDiv.removeChild(emailDisplay);
+        displayDiv.removeChild(phoneDisplay);
+        displayDiv.removeChild(editButton);
+        displayDiv.removeChild(deleteButton);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  });
+
+  const userDiv = document.createElement("div");
+  userDiv.appendChild(nameDisplay);
+  userDiv.appendChild(emailDisplay);
+  userDiv.appendChild(phoneDisplay);
+  userDiv.appendChild(editButton);
+  userDiv.appendChild(deleteButton);
+  displayDiv.appendChild(userDiv);
+}
